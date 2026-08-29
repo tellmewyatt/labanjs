@@ -1,0 +1,20 @@
+{
+  "staffs": {
+    "player1": {
+      "items": [
+        { 
+          "type": "labanNote",
+          "startTime": 0,
+          "position": 0,
+          "value": "footLeft"
+        }
+      ]
+
+    }
+
+
+  }
+
+
+
+}
