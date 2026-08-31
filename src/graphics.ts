@@ -1,22 +1,26 @@
-import { forward } from './symbols'
 function generateId() {
   return Math.random().toString(16).slice(2)
 }
 class StaffItem {
-  constructor(score, staff, { xSpaces, widthSpaces, startTime, endTime, symbol }) {
+  constructor(score, staff, { xSpaces, widthSpaces, startTime, endTime, symbol, level }) {
     this.score = score
     this.xSpaces = xSpaces
     this.widthSpaces = widthSpaces
     this.startTime = startTime
     this.endTime = endTime
     this.symbol = symbol
+    this.level = level ?? "middle"
     score.register(this)
   }
   render({ x, y, width, height }) {
-    console.log(width/256, height/256)
+    let fill = "white"
+    if (this.level == "top")
+      fill = "grey"
+    if (this.level == "bottom")
+      fill = "black"
     const symbol = this.symbol
-      .replace('path', `path  transform="translate(${x}, ${y}) scale(${width / 256}, ${height / 256}) "`)
-      .replace(/style=".*"/, "fill='url(#diagonal-stripes)'")
+      .replace('path', `path transform="translate(${x}, ${y}) scale(${width / 256}, ${height / 256}) "`)
+      .replace(/style=".*"/, `fill='${fill}' stroke='#000000'`)
     
     return `${symbol}`
 
@@ -48,9 +52,8 @@ class Staff {
     this.staffLines.push(new StaffLine(this.score, stroke))
 
   }
-  addStaffItem(props = { xSpaces: 2, widthSpaces: 1, startTime: 0, endTime: 1, symbol: forward }) {
-    const { xSpaces, widthSpaces, startTime, endTime, symbol } = props
-    const item = new StaffItem(this.score, this, { xSpaces, widthSpaces, startTime, endTime, symbol })
+  addStaffItem(props = { xSpaces: 2, widthSpaces: 1, startTime: 0, endTime: 1, symbol: "" }) {
+    const item = new StaffItem(this.score, this, props)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
