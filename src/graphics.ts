@@ -40,6 +40,29 @@ class StaffLine {
   }
 
 }
+class BarLine {
+  constructor(score, staff, { xSpaces, widthSpaces, startTime, stroke, barlineType }) {
+    this.xSpaces = xSpaces
+    this.widthSpaces = widthSpaces
+    this.startTime = startTime
+    this.endTime = startTime 
+    score.register(this)
+    this.stroke = stroke ?? "black"
+    this.barlineType = "double"
+  }
+  render(coords) {
+    const { x, y, width, height  } = coords;
+    const { stroke } = this
+    if (this.barlineType == "double")
+      return `
+        <rect x=${x} fill="white" width=${width} y=${y} height="5" stroke='${stroke}' id="${this.id}" />
+      `
+    else
+      return `<line x1=${x} x2=${x+width} y1=${y} y2=${y} stroke='${stroke}' id="${this.id}" />`
+
+  }
+
+}
 class Staff {
   constructor(score) {
     this.score = score
@@ -54,6 +77,13 @@ class Staff {
   }
   addStaffItem(props = { xSpaces: 2, widthSpaces: 1, startTime: 0, endTime: 1, symbol: "" }) {
     const item = new StaffItem(this.score, this, props)
+    this.staffItems.push(item)
+    this.score.notifyChange(item)
+    return item
+
+  }
+  addBarLine(props = { xSpaces: 0, widthSpaces: 4, startTime: 1, symbol: "" }) {
+    const item = new BarLine(this.score, this, props)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
@@ -109,6 +139,7 @@ export class GraphicScore {
     this.targetElement = targetElement
     this.staffWidth = 300 
     this.endTime = 1
+    this.startTime = 0
     this.allItems = {}
 
   }
@@ -120,6 +151,8 @@ export class GraphicScore {
   notifyChange(newItem) {
     if(newItem.endTime > this.endTime) 
       this.endTime = newItem.endTime
+    if(newItem.startTime < this.startTime) 
+      this.startTime = newItem.startTime
 
   }
   addLabanStaff(name) {
