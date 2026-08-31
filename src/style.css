@@ -17,3 +17,8 @@ body {
   height: 100%;
 
 }
+svg path, svg rect, svg circle, svg line, svg polygon, svg polyline {
+  stroke-width: 2px;
+  vector-effect: non-scaling-stroke;
+}
+

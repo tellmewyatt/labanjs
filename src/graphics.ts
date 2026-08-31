@@ -1,43 +1,59 @@
-import forwardLeft from './symbols/forward_left.svg'
+import { forward } from './symbols'
+function generateId() {
+  return Math.random().toString(16).slice(2)
+}
 class StaffItem {
-  constructor({ xSpaces, widthSpaces, startTime, endTime }) {
+  constructor(score, staff, { xSpaces, widthSpaces, startTime, endTime, symbol }) {
+    this.score = score
     this.xSpaces = xSpaces
     this.widthSpaces = widthSpaces
     this.startTime = startTime
     this.endTime = endTime
+    this.symbol = symbol
+    score.register(this)
   }
   render({ x, y, width, height }) {
-    return `<image href=${forwardLeft} width=${width} height=${height} x=${x} y=${y} preserveAspectRatio="none"/>`
+    console.log(width/256, height/256)
+    const symbol = this.symbol
+      .replace('path', `path  transform="translate(${x}, ${y}) scale(${width / 256}, ${height / 256}) "`)
+      .replace(/style=".*"/, "fill='url(#diagonal-stripes)'")
+    
+    return `${symbol}`
 
   }
 
 }
 class StaffLine {
-  constructor(stroke) {
+  constructor(score, stroke) {
     this.stroke = stroke ?? "black"
+    score.register(this)
 
   }
   render(coords) {
     const { x, y, height  } = coords;
     const { stroke } = this
-    return `<line x1=${x} x2=${x} y1=${y} y2=${y+height} stroke='${stroke}' />`
+    return `<line x1=${x} x2=${x} y1=${y} y2=${y+height} stroke='${stroke}' id="${this.id}" />`
   }
 
 }
 class Staff {
-  constructor(parent) {
-    this.parent = parent
+  constructor(score) {
+    this.score = score
     this.staffLines = []
     this.staffItems = []
+    score.register(this)
 
   }
   addStaffLine(stroke) {
-    this.staffLines.push(new StaffLine(stroke))
+    this.staffLines.push(new StaffLine(this.score, stroke))
 
   }
-  addStaffItem() {
-    this.staffItems.push(new StaffItem({ xSpaces: 2, widthSpaces: 1, startTime: 0, endTime: 1 }))
-    this.staffItems.push(new StaffItem({ xSpaces: 1, widthSpaces: 1, startTime: 1, endTime: 2 }))
+  addStaffItem(props = { xSpaces: 2, widthSpaces: 1, startTime: 0, endTime: 1, symbol: forward }) {
+    const { xSpaces, widthSpaces, startTime, endTime, symbol } = props
+    const item = new StaffItem(this.score, this, { xSpaces, widthSpaces, startTime, endTime, symbol })
+    this.staffItems.push(item)
+    this.score.notifyChange(item)
+    return item
 
   }
   renderStaffLines(coords) {
@@ -62,17 +78,14 @@ class Staff {
       const item = this.staffItems[i]
       const itemX = x + staffSpace * item.xSpaces
       const itemWidth = staffSpace * item.widthSpaces
-      const itemY = (item.startTime / this.parent.getTotalTime()) * height + y
-      const itemHeight = ((item.endTime - item.startTime)/ this.parent.getTotalTime()) * height
+      const itemHeight = ((item.endTime - item.startTime)/ this.score.getTotalTime()) * height
+      const itemY = (1 - item.startTime / this.score.getTotalTime()) * height + y - itemHeight
 
       staffItems = staffItems + item.render({
         x: itemX,
         width: itemWidth,
         y: itemY,
         height: itemHeight
-        
-
-
       })
 
     }
@@ -91,8 +104,31 @@ export class GraphicScore {
   constructor(targetElement) {
     this.staffs = [] 
     this.targetElement = targetElement
-    this.staffWidth = 100
+    this.staffWidth = 300 
     this.endTime = 1
+    this.allItems = {}
+
+  }
+  addListeners() {
+    const handler = e => console.log(e)
+    addEventListener("click", handler)
+
+  }
+  notifyChange(newItem) {
+    if(newItem.endTime > this.endTime) 
+      this.endTime = newItem.endTime
+
+  }
+  addLabanStaff(name) {
+    const staff = new Staff(this)
+    staff.addStaffLine('black')
+    staff.addStaffLine('none')
+    staff.addStaffLine('black')
+    staff.addStaffLine('none')
+    staff.addStaffLine('black')
+    staff.addStaffLine('none')
+    this.staffs.push(staff)
+    return staff
 
   }
   addStaff(name, type) {
@@ -104,19 +140,14 @@ export class GraphicScore {
     staff.addStaffLine('black')
     this.staffs.push(staff)
     return staff
-
   }
   getTotalTime() {
-    let endTime = 1
-    for (const staff of this.staffs) {
-      for (const item of staff.staffItems) {
-        if (item.endTime > endTime)
-          endTime = item.endTime
-      }
-    }
-    this.endTime = endTime
-    return endTime
+    return this.endTime
 
+  }
+  register(item) {
+    item.id = generateId()
+    this.allItems[item.id] = item
   }
   render() {
     const box = this.targetElement.getBoundingClientRect()
@@ -132,7 +163,14 @@ export class GraphicScore {
       })
 
     }
-    this.targetElement.innerHTML = `<svg width=${box.width} height=${box.height}>${staffs}</svg>`
+    this.targetElement.innerHTML = `<svg width=${box.width} height=${box.height}>
+      <defs>
+        <pattern id="diagonal-stripes" viewBox="0,0,10,10" height='100' width='100' patternUnits="userSpaceOnUse">
+          <line x1="0" x2="10" y1="10" y2="0" stroke='#000000' vector-effect="non-scaling-stroke" stroke-width='1' />
+        </pattern>
+      </defs>
+
+    ${staffs}</svg>`
 
   }
 
