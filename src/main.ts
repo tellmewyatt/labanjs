@@ -18,3 +18,7 @@ staff1.addStaffCue({ xSpaces: -2, time: 2, name: "B" })
 
 score.addListeners()
 score.render()
+for (const staff of score.staffs) {
+  staff.play()
+
+}

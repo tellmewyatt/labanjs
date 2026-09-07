@@ -101,12 +101,36 @@ export class Staff {
     }
     return staffItems
   }
+  play() {
+    const { width, height, y } = this.lastRenderProps
+    const element = document.getElementById(this.playbackLineId)
+    const zero = performance.now()
+    const animate = () => {
+      let newTime = (performance.now() - zero) / 1000
+      const newY = (1 - (newTime - this.score.startTime)/ this.score.getTotalTime()) * height + y
+      element.setAttribute("y", newY)
+      if(newTime < this.score.endTime)
+        requestAnimationFrame(animate)
+
+    }
+    
+    requestAnimationFrame(animate)
+
+  }
+  renderPlaybackLine(coords, time=1) {
+    const { x, y, width, height } = coords;
+    const itemY = (1 - (time - this.score.startTime)/ this.score.getTotalTime()) * height + y
+    const id = `playback-line-${this.score.generateId()}`
+    this.playbackLineId = id
+    return `<rect id="${id}" x="${x}" width="${width}" height="2px" fill="red" y="${itemY}" />`
+
+  }
   render(coords) {
+    this.lastRenderProps = coords; 
     const staffLines = this.renderStaffLines(coords)
     const staffItems = this.renderStaffItems(coords)
-    return `${staffLines}${staffItems}`
-    
-
+    const playbackLine = this.renderPlaybackLine(coords)
+    return `${staffLines}${staffItems}${playbackLine}`
   }
 
 }
