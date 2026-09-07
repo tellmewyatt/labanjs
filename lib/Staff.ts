@@ -2,13 +2,18 @@ import { StaffCue } from './StaffCue'
 import { StaffItem } from './StaffItem'
 import { StaffText } from './StaffText'
 import { Barline } from './Barline'
+import { StretchedSymbol } from './StretchedSymbol'
+import type { Score } from './Score'
+import type { Coords, StretchedSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
 class StaffLine {
-  constructor(score, stroke) {
+  stroke: string;
+  id: string;
+  constructor(score: Score, stroke: string) {
     this.stroke = stroke ?? "black"
-    score.register(this)
+    this.id = score.register(this)
 
   }
-  render(coords) {
+  render(coords: Coords) {
     const { x, y, height  } = coords;
     const { stroke } = this
     return `<line x1=${x} x2=${x} y1=${y} y2=${y+height} stroke='${stroke}' id="${this.id}" />`
@@ -16,7 +21,13 @@ class StaffLine {
 
 }
 export class Staff {
-  constructor(score) {
+  lastRenderProps?: Coords;
+  playbackLineId?: string;
+  score: Score;
+  staffLines: StaffLine[]
+  staffItems: StaffItem[]
+  cues: StaffCue[]
+  constructor(score: Score) {
     this.score = score
     this.staffLines = []
     this.staffItems = []
@@ -34,45 +45,47 @@ export class Staff {
     this.score.render()
 
   }
-  addStaffLine(stroke) {
+
+  addStaffLine(stroke: string) {
     this.staffLines.push(new StaffLine(this.score, stroke))
   }
-  addStaffItem(props = { xSpaces: 2, widthSpaces: 1, startTime: 0, endTime: 1, symbol: "" }) {
-    const item = new StaffItem(this.score, this, props)
+  addStretchedSymbol(options?: StretchedSymbolOptions) {
+    const item = new StretchedSymbol(this.score, this, options)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
 
   }
-  addStaffText(props = { xSpaces: -0.5, time: 1, attach: "left", content: "some text" }) {
-    const item = new StaffText(this.score, this, props)
+  addStaffText(options?: StaffTextOptions) {
+    const item = new StaffText(this.score, this, options)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
 
   }
-  addStaffCue(props = { xSpaces: -2, time: 1, attach: "left", name: "A" }) {
-    const item = new StaffCue(this.score, this, props)
+  addStaffCue(options?: StaffCueOptions) {
+    const item = new StaffCue(this.score, this, options)
     this.cues.push(item)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
 
   }
-  addBarline(props = { xSpaces: 0, widthSpaces: 4, startTime: 1, symbol: "" }) {
-    const item = new Barline(this.score, this, props)
+  addBarline(options?: BarlineOptions) {
+    const item = new Barline(this.score, this, options)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
 
   }
-  renderStaffLines(coords) {
+  renderStaffLines(coords: Coords) {
     const { x, y, width, height } = coords;
     let staffLines = ""
-    for (const i in this.staffLines) {
+    for (let i= 0; i < this.staffLines.length; i++) {
       staffLines = staffLines + this.staffLines[i].render({
         x: x + (width/this.staffLines.length * i), 
         y,
+        width,
         height
 
       })
@@ -80,9 +93,9 @@ export class Staff {
     }
     return staffLines
   }
-  renderStaffItems(coords) {
+  renderStaffItems(coords: Coords) {
     const staffSpace = coords.width / this.staffLines.length
-    const { x, y, width, height } = coords;
+    const { x, y, height } = coords;
     let staffItems = ""
     for (const i in this.staffItems) {
       const item = this.staffItems[i]
@@ -102,22 +115,26 @@ export class Staff {
     return staffItems
   }
   play() {
-    const { width, height, y } = this.lastRenderProps
-    const element = document.getElementById(this.playbackLineId)
-    const zero = performance.now()
-    const animate = () => {
-      let newTime = (performance.now() - zero) / 1000
-      const newY = (1 - (newTime - this.score.startTime)/ this.score.getTotalTime()) * height + y
-      element.setAttribute("y", newY)
-      if(newTime < this.score.endTime)
-        requestAnimationFrame(animate)
+    const element = document.getElementById(this.playbackLineId ?? "")
+    if(this.lastRenderProps && element) {
+      const { height, y } = this.lastRenderProps
+      const zero = performance.now()
+      const animate = () => {
+        if(element) {
+          let newTime = (performance.now() - zero) / 1000
+          const newY = (1 - (newTime - this.score.startTime)/ this.score.getTotalTime()) * height + y
+          element.setAttribute("y", String(newY))
+          if(newTime < this.score.endTime)
+            requestAnimationFrame(animate)
+        }
 
+      }
+      
+      requestAnimationFrame(animate)
     }
-    
-    requestAnimationFrame(animate)
 
   }
-  renderPlaybackLine(coords, time=1) {
+  renderPlaybackLine(coords: Coords, time=1) {
     const { x, y, width, height } = coords;
     const itemY = (1 - (time - this.score.startTime)/ this.score.getTotalTime()) * height + y
     const id = `playback-line-${this.score.generateId()}`
@@ -125,7 +142,7 @@ export class Staff {
     return `<rect id="${id}" x="${x}" width="${width}" height="2px" fill="red" y="${itemY}" />`
 
   }
-  render(coords) {
+  render(coords: Coords) {
     this.lastRenderProps = coords; 
     const staffLines = this.renderStaffLines(coords)
     const staffItems = this.renderStaffItems(coords)

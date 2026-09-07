@@ -1,6 +1,12 @@
 import { Staff } from './Staff'
 export class Score {
-  constructor(targetElement) {
+  staffs: Staff[];
+  targetElement: Element;
+  staffWidth: number;
+  endTime: number;
+  startTime: number;
+  allItems: Record<string,any>;
+  constructor(targetElement: Element) {
     this.staffs = [] 
     this.targetElement = targetElement
     this.staffWidth = 300 
@@ -13,25 +19,35 @@ export class Score {
     return Math.random().toString(16).slice(2)
   }
   addListeners() {
-    const handler = e => {
-      let id = e.target.id
-      if(!id)
-        id = e.target.closest("g")?.id
-      this.allItems[id]?.onClick?.(e)
+    const handler = (e: MouseEvent) => {
+      if(e.target) {
+        const target = e.target as Element
+        let id = target.id
+        if(!id) {
+          const closestG = target.closest("g")
+          if (!closestG)
+            throw Error("Could not find closest g tag to click target!")
+          else if (!closestG.id)
+            throw Error("Closest g to click target is missing id!")
+          else
+            id = closestG.id
+        }
+        this.allItems[id]?.onClick?.(e)
+      }
     }
     const resizeHandler = ()=> this.render()
     addEventListener("click", handler)
     addEventListener("resize", resizeHandler)
 
   }
-  notifyChange(newItem) {
+  notifyChange(newItem: any) {
     if(newItem.endTime > this.endTime) 
       this.endTime = newItem.endTime
     if(newItem.startTime < this.startTime) 
       this.startTime = newItem.startTime
 
   }
-  addLabanStaff(name) {
+  addLabanStaff() {
     const staff = new Staff(this)
     staff.addStaffLine('black')
     staff.addStaffLine('none')
@@ -43,7 +59,7 @@ export class Score {
     return staff
 
   }
-  addStaff(name, type) {
+  addStaff() {
     const staff = new Staff(this)
     staff.addStaffLine('black')
     staff.addStaffLine('black')
@@ -57,9 +73,10 @@ export class Score {
     return this.endTime - this.startTime
 
   }
-  register(item) {
-    item.id = this.generateId()
-    this.allItems[item.id] = item
+  register(item: any) {
+    const id = this.generateId()
+    this.allItems[id] = item
+    return id
   }
   render() {
     const box = this.targetElement.getBoundingClientRect()
@@ -75,7 +92,7 @@ export class Score {
       })
 
     }
-    this.targetElement.innerHTML = `<svg width=${box.width} height=${box.height}>
+    this.targetElement.innerHTML = `<svg id="score" width=${box.width} height=${box.height}>
       <defs>
         <pattern id="diagonal-stripes" viewBox="0,0,10,10" height='100' width='100' patternUnits="userSpaceOnUse">
           <line x1="0" x2="10" y1="10" y2="0" stroke='#000000' vector-effect="non-scaling-stroke" stroke-width='1' />

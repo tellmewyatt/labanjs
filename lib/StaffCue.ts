@@ -1,21 +1,28 @@
-export class StaffCue {
-  constructor(score, staff, { xSpaces, widthSpaces=2, time, name="A" }) {
-    this.score = score
-    this.staff = staff
-    this.xSpaces = xSpaces
-    this.widthSpaces=widthSpaces;
-    this.startTime = time 
-    this.endTime = time 
-    this.content = name 
+import { Score } from './Score'
+import { Staff } from './Staff'
+import type { StaffCueOptions, Coords } from './types.d'
+import { StaffItem } from './StaffItem'
+export class StaffCue extends StaffItem {
+  lastRenderProps?: Coords;
+  content: string
+  active: boolean
+  constructor(score: Score, staff: Staff, options?: StaffCueOptions) {
+    options = options ?? {}
+    super(score, staff, options)
+    this.xSpaces = options.xSpaces ?? -1
+    this.widthSpaces= options.widthSpaces ?? 1;
+    this.startTime = options.time ?? 0
+    this.endTime = options.time ?? 0
+    this.content = options.name  ?? "A"
     this.active = false
-    score.register(this)
   }
-  onClick(e) {
+  onClick(e: MouseEvent) {
+    console.log("Cue received click", e)
     this.active = true
     this.staff.activateCue(this)
   }
-  render(props) {
-    const { x, y, width, height } = props
+  render(props: Coords) {
+    const { x, y, width } = props
     this.lastRenderProps = props; 
     const radius = 20;
     const fill = this.active ? "red" : "white" 

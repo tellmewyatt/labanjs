@@ -1,17 +1,16 @@
 import './style.css'
-import { Score } from '../lib/main.ts'
-import symbols from './symbols'
-const { left, right, forward, forwardRight } = symbols
+import { Score, symbols } from '../lib/main.ts'
+const { right, forward, forwardRight } = symbols
 
-const score = new Score(document.querySelector("#app"))
-document.querySelector("#app").style.height = "3000px"
-const staff1 = score.addLabanStaff("laban")
-const staff2 = score.addLabanStaff("laban2")
+const score = new Score(document.querySelector("#app")!)
+document.querySelector<HTMLElement>("#app")!.style.height = "3000px"
+const staff1 = score.addLabanStaff()
+score.addLabanStaff()
 
-staff1.addStaffItem({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: right, level: 'top' })
-staff1.addStaffItem({ xSpaces: 2, widthSpaces: 1, startTime: 2, endTime: 5, symbol: forward })
-staff1.addStaffItem({ xSpaces: 0, widthSpaces: 1, startTime: -1, endTime: 0, symbol: forwardRight })
-staff1.addBarline({ xSpaces: 0, widthSpaces: 4, startTime: 0 })
+staff1.addStretchedSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: right, level: 'middle' })
+staff1.addStretchedSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 2, endTime: 5, symbol: forward })
+staff1.addStretchedSymbol({ xSpaces: 0, widthSpaces: 1, startTime: -1, endTime: 0, symbol: forwardRight })
+staff1.addBarline({ xSpaces: 0, widthSpaces: 4, time: 0 })
 staff1.addStaffCue()
 staff1.addStaffCue({ xSpaces: -2, time: 2, name: "B" })
 

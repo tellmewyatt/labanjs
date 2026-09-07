@@ -1,15 +1,24 @@
-export class Barline {
-  constructor(score, staff, { xSpaces, widthSpaces, startTime, stroke, barlineType }) {
-    this.xSpaces = xSpaces
-    this.widthSpaces = widthSpaces
-    this.startTime = startTime
-    this.endTime = startTime 
-    score.register(this)
-    this.stroke = stroke ?? "black"
-    this.barlineType = "double"
+import type { Score } from './Score'
+import type { Staff } from './Staff'
+import type { BarlineOptions, Coords } from './types.d.ts'
+import { StaffItem } from './StaffItem'
+
+export class Barline extends StaffItem {
+  stroke: string;
+  barlineType: string;
+  constructor(score: Score, staff: Staff, options?: BarlineOptions) {
+    options = options ?? {}
+    super(score, staff, { startTime: options.time, endTime: options.time, ...options })
+    this.xSpaces = options.xSpaces ??  0
+    this.widthSpaces = options.widthSpaces ?? 5
+    this.startTime = options.time ?? 0
+    this.endTime = options.time ?? 0
+    this.stroke = options.stroke ?? "black"
+    this.barlineType = options.barlineType ?? "single"
+    this.id = score.register(this)
   }
-  render(coords) {
-    const { x, y, width, height  } = coords;
+  render(coords : Coords) {
+    const { x, y, width } = coords;
     const { stroke } = this
     if (this.barlineType == "double")
       return `

@@ -1,26 +1,28 @@
+import type { Score } from './Score'
+import type { Staff } from './Staff'
+import type { Coords } from './types.d'
+import type { StaffItemOptions } from './types.d'
 export class StaffItem {
-  constructor(score, staff, { xSpaces, widthSpaces, startTime, endTime, symbol, level }) {
+  id: string;
+  score: Score;
+  staff: Staff
+  xSpaces: number;
+  widthSpaces: number;
+  startTime: number;
+  endTime: number;
+  constructor(score: Score, staff: Staff, options?: StaffItemOptions) {
+    options = options ?? {}
     this.score = score
-    this.xSpaces = xSpaces
-    this.widthSpaces = widthSpaces
-    this.startTime = startTime
-    this.endTime = endTime
-    this.symbol = symbol
-    this.level = level ?? "middle"
-    score.register(this)
+    this.staff = staff
+    this.xSpaces = options.xSpaces ?? 0
+    this.widthSpaces = options.widthSpaces ?? 1
+    this.startTime = options.startTime ?? 0 
+    this.endTime = options.endTime ?? 0
+    this.id = score.register(this)
   }
-  render({ x, y, width, height }) {
-    let fill = "white"
-    if (this.level == "top")
-      fill = "grey"
-    if (this.level == "bottom")
-      fill = "black"
-    const symbol = this.symbol
-      .replace('path', `path transform="translate(${x}, ${y}) scale(${width / 256}, ${height / 256}) "`)
-      .replace(/style=".*"/, `fill='${fill}' stroke='#000000'`)
-    
-    return `${symbol}`
+  render(coords: Coords) {
+    const { x, y, width, height } = coords;
+    return `<rect x=${x} y=${y} width=${width} height=${height} />`
 
   }
-
 }
