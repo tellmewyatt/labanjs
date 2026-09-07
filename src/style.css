@@ -21,4 +21,8 @@ svg path, svg rect, svg circle, svg line, svg polygon, svg polyline {
   stroke-width: 2px;
   vector-effect: non-scaling-stroke;
 }
+text.cue {
+  font: 20pt sans-serif;
+  user-select: none;
 
+}

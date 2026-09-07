@@ -1,0 +1,99 @@
+import { Staff } from './Staff'
+export class Score {
+  constructor(targetElement) {
+    this.staffs = [] 
+    this.targetElement = targetElement
+    this.staffWidth = 300 
+    this.endTime = 1
+    this.startTime = 0
+    this.allItems = {}
+
+  }
+  generateId() {
+    return Math.random().toString(16).slice(2)
+  }
+  addListeners() {
+    const handler = e => {
+      let id = e.target.id
+      if(!id)
+        id = e.target.closest("g")?.id
+      this.allItems[id]?.onClick?.(e)
+    }
+    const resizeHandler = ()=> this.render()
+    addEventListener("click", handler)
+    addEventListener("resize", resizeHandler)
+
+  }
+  notifyChange(newItem) {
+    if(newItem.endTime > this.endTime) 
+      this.endTime = newItem.endTime
+    if(newItem.startTime < this.startTime) 
+      this.startTime = newItem.startTime
+
+  }
+  addLabanStaff(name) {
+    const staff = new Staff(this)
+    staff.addStaffLine('black')
+    staff.addStaffLine('none')
+    staff.addStaffLine('black')
+    staff.addStaffLine('none')
+    staff.addStaffLine('black')
+    staff.addStaffLine('none')
+    this.staffs.push(staff)
+    return staff
+
+  }
+  addStaff(name, type) {
+    const staff = new Staff(this)
+    staff.addStaffLine('black')
+    staff.addStaffLine('black')
+    staff.addStaffLine('black')
+    staff.addStaffLine('black')
+    staff.addStaffLine('black')
+    this.staffs.push(staff)
+    return staff
+  }
+  getTotalTime() {
+    return this.endTime - this.startTime
+
+  }
+  register(item) {
+    item.id = this.generateId()
+    this.allItems[item.id] = item
+  }
+  render() {
+    const box = this.targetElement.getBoundingClientRect()
+    let staffs = ""
+    for (let i = 0; i < this.staffs.length; i++) {
+      const staffX = (i+1) * (box.width) / (this.staffs.length + 1) - (this.staffWidth/2)
+      staffs = staffs + this.staffs[i].render({
+        x: 10 +  staffX,
+        y: 10,
+        width: this.staffWidth,
+        height: box.height - 10
+
+      })
+
+    }
+    this.targetElement.innerHTML = `<svg width=${box.width} height=${box.height}>
+      <defs>
+        <pattern id="diagonal-stripes" viewBox="0,0,10,10" height='100' width='100' patternUnits="userSpaceOnUse">
+          <line x1="0" x2="10" y1="10" y2="0" stroke='#000000' vector-effect="non-scaling-stroke" stroke-width='1' />
+        </pattern>
+        <marker
+          id="arrow"
+          viewBox="0 0 10 10"
+          refX="10"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z" />
+        </marker>
+      </defs>
+
+    ${staffs}</svg>`
+
+  }
+
+}
