@@ -5,6 +5,8 @@ export interface Coords {
   y: number;
 
 }
+/** Direction of a score - matches with HTML */
+export type Orientation = 'column'|'row'|'row-reverse'|'column-reverse'
 export interface StaffItemOptions {
   xSpaces?: number;
   widthSpaces?: number;
@@ -16,6 +18,10 @@ export interface StretchedSymbolOptions extends StaffItemOptions {
   level?: "middle"|"high"|"low";
 }
 
+export interface StaffOptions {
+  playbackLookAhead: number
+
+}
 export interface StaffTextOptions {
   xSpaces?: number;
   time?: number;
@@ -23,12 +29,17 @@ export interface StaffTextOptions {
   content?: string;
 
 }
-
 export interface StaffCueOptions {
+  /** Position from left in staff line spaces */
   xSpaces?: number;
+  /** How long should the line for this cue be, if any? */
   widthSpaces?: number;
+  /** Position in time */
   time?: number;
+  /** Title of cue */
   name?: string;
+  /** How should this cue be activated **/
+  activationOptions?: CueActivationOptions
 
 }
 
@@ -40,3 +51,6 @@ export interface BarlineOptions {
   barlineType?: "double"|"single";
 
 }
+/** Takes the difference in time from the targeted time to actual time */
+export type PerformanceCallback = (dTime: number) => void
+export type CueState = "reached"|"cued"|"idle"

@@ -7,7 +7,19 @@
     <title>labanjs</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div style="height: 100%; display: flex; flex-direction: column">
+      <div style="flex-grow: 1; position: relative; width: 100%">
+        <div style="position: absolute; inset: 0; overflow: auto; ">
+          <div id="score"></div>
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: row">
+        <button id="playbackButton" style="width: 100px; height: 100px">Start Playback</button>
+        <button id="reset" style="width: 100px; height: 100px">Reset</button>
+        <button id="cueA" style="width: 100px; height: 100px">Cue A</button>
+        <button id="cueB" style="width: 100px; height: 100px">Cue B</button>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

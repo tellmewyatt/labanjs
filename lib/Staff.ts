@@ -4,7 +4,7 @@ import { StaffText } from './StaffText'
 import { Barline } from './Barline'
 import { StretchedSymbol } from './StretchedSymbol'
 import type { Score } from './Score'
-import type { Coords, StretchedSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
+import type { StaffOptions, Coords, StretchedSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
 class StaffLine {
   stroke: string;
   id: string;
@@ -18,34 +18,31 @@ class StaffLine {
     const { stroke } = this
     return `<line x1=${x} x2=${x} y1=${y} y2=${y+height} stroke='${stroke}' id="${this.id}" />`
   }
-
 }
 export class Staff {
   lastRenderProps?: Coords;
   playbackLineId?: string;
+  playing: boolean;
+  playbackTime: number;
+  playbackLookAhead:number;
+  cueIndex: number;
   score: Score;
   staffLines: StaffLine[]
   staffItems: StaffItem[]
   cues: StaffCue[]
+  stopAtTime?: number|null;
   constructor(score: Score) {
     this.score = score
     this.staffLines = []
     this.staffItems = []
     this.cues = []
+    this.playing = false
+    this.playbackTime = 0
+    this.cueIndex = 0
+    this.playbackLookAhead = 0.05
     score.register(this)
 
   }
-  activateCue(cue: StaffCue) {
-    for(const cue of this.cues) {
-      if(cue.active) {
-        cue.active = false
-      }
-    }
-    cue.active = true
-    this.score.render()
-
-  }
-
   addStaffLine(stroke: string) {
     this.staffLines.push(new StaffLine(this.score, stroke))
   }
@@ -114,18 +111,53 @@ export class Staff {
     }
     return staffItems
   }
-  play() {
+  stopPlayback(dt) {
+    this.stopAtTime = this.playbackTime + dt
+
+  }
+  goToCueIndex(cueIndex: number = 0) {
+    this.cueIndex = cueIndex 
+    for (const cueIndex in this.cues) {
+      this.cues[cueIndex].reset(this.cues[this.cueIndex].startTime)
+
+    }
+    this.playbackTime = this.cues[this.cueIndex].startTime - this.playbackLookAhead
+    this.score.render()
+  }
+  start(time?: number) {
+    if(time)
+      this.playbackTime = time
     const element = document.getElementById(this.playbackLineId ?? "")
+    this.playing = true
+    let currentCue = this.cues[this.cueIndex]
+    const offset = this.playbackTime
     if(this.lastRenderProps && element) {
       const { height, y } = this.lastRenderProps
       const zero = performance.now()
       const animate = () => {
-        if(element) {
-          let newTime = (performance.now() - zero) / 1000
+        if(element && this.playing) {
+          let newTime = (performance.now() - zero) / 1000 + offset
+          this.playbackTime = newTime
+          if(currentCue && currentCue.startTime - this.playbackLookAhead < newTime) {
+            currentCue.handleReached(newTime - currentCue.startTime)
+            this.cueIndex++
+            currentCue = this.cues[this.cueIndex]
+          }
           const newY = (1 - (newTime - this.score.startTime)/ this.score.getTotalTime()) * height + y
           element.setAttribute("y", String(newY))
-          if(newTime < this.score.endTime)
+          if(newTime < this.score.endTime && !(this.stopAtTime && newTime > this.stopAtTime)) {
             requestAnimationFrame(animate)
+          }
+          else {
+            this.stopAtTime = null;
+            this.playing = false;
+
+          }
+          element.scrollIntoView({
+            behavior: "smooth", // Use "auto" for instant jump
+            block: "center",    // Vertically center
+            inline: "center"    // Horizontally center
+          });
         }
 
       }
@@ -134,8 +166,9 @@ export class Staff {
     }
 
   }
-  renderPlaybackLine(coords: Coords, time=1) {
+  renderPlaybackLine(coords: Coords) {
     const { x, y, width, height } = coords;
+    const time = this.playbackTime
     const itemY = (1 - (time - this.score.startTime)/ this.score.getTotalTime()) * height + y
     const id = `playback-line-${this.score.generateId()}`
     this.playbackLineId = id

@@ -1,4 +1,5 @@
 import { Staff } from './Staff'
+import { Orientation } from './types.d'
 export class Score {
   staffs: Staff[];
   targetElement: Element;
@@ -32,12 +33,12 @@ export class Score {
           else
             id = closestG.id
         }
-        this.allItems[id]?.onClick?.(e)
+        this.allItems[id]?.handleClick?.(e)
       }
     }
     const resizeHandler = ()=> this.render()
-    addEventListener("click", handler)
-    addEventListener("resize", resizeHandler)
+    this.targetElement.addEventListener("click", handler)
+    window.addEventListener("resize", resizeHandler)
 
   }
   notifyChange(newItem: any) {
