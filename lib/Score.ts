@@ -1,5 +1,6 @@
 import { Staff } from './Staff'
 import { Orientation } from './types.d'
+import { symbolDefs } from './symbols'
 export class Score {
   staffs: Staff[];
   targetElement: Element;
@@ -95,9 +96,15 @@ export class Score {
     }
     this.targetElement.innerHTML = `<svg id="score" width=${box.width} height=${box.height}>
       <defs>
-        <pattern id="diagonal-stripes" viewBox="0,0,10,10" height='100' width='100' patternUnits="userSpaceOnUse">
-          <line x1="0" x2="10" y1="10" y2="0" stroke='#000000' vector-effect="non-scaling-stroke" stroke-width='1' />
+        <pattern id="diagonal-stripes"
+                 patternUnits="userSpaceOnUse"
+                 patternContentUnits="userSpaceOnUse"
+
+                 width="20" height="20">
+          <line x1="0" y1="20" x2="20" y2="0"
+                stroke="black" stroke-width="1" />
         </pattern>
+
         <marker
           id="arrow"
           viewBox="0 0 10 10"
@@ -108,6 +115,7 @@ export class Score {
           orient="auto-start-reverse">
           <path d="M 0 0 L 10 5 L 0 10 z" />
         </marker>
+        ${symbolDefs}
       </defs>
 
     ${staffs}</svg>`

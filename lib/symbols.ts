@@ -28,4 +28,12 @@ function extractPath(svgRaw: string) : string {
 for (const [key, value] of Object.entries(symbols)) {
   symbols[key as keyof typeof symbols] = extractPath(value)
 }
-export { symbols }
+const symbolDefs = Object.entries(symbols).reduce((p, [k, v]) => {
+  return `${p}<clipPath id="${k}-clip">${v.replace("path", `path id="${k}"`)
+      .replace(/style=".*"/, ` stroke='#000000' vector-effect="non-scaling-stroke"`)
+  }</clipPath>`
+
+
+}, "")
+console.log(symbolDefs)
+export { symbols, symbolDefs }

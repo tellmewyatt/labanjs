@@ -13,7 +13,7 @@ export interface StaffItemOptions {
   startTime?: number;
   endTime?: number;
 }
-export interface StretchedSymbolOptions extends StaffItemOptions {
+export interface LabanSymbolOptions extends StaffItemOptions {
   symbol?: string;
   level?: "middle"|"high"|"low";
 }

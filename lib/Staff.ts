@@ -2,9 +2,9 @@ import { StaffCue } from './StaffCue'
 import { StaffItem } from './StaffItem'
 import { StaffText } from './StaffText'
 import { Barline } from './Barline'
-import { StretchedSymbol } from './StretchedSymbol'
+import { LabanSymbol } from './LabanSymbol'
 import type { Score } from './Score'
-import type { StaffOptions, Coords, StretchedSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
+import type { StaffOptions, Coords, LabanSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
 class StaffLine {
   stroke: string;
   id: string;
@@ -46,8 +46,8 @@ export class Staff {
   addStaffLine(stroke: string) {
     this.staffLines.push(new StaffLine(this.score, stroke))
   }
-  addStretchedSymbol(options?: StretchedSymbolOptions) {
-    const item = new StretchedSymbol(this.score, this, options)
+  addLabanSymbol(options?: LabanSymbolOptions) {
+    const item = new LabanSymbol(this.score, this, options)
     this.staffItems.push(item)
     this.score.notifyChange(item)
     return item
