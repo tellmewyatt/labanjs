@@ -3,6 +3,7 @@ import { StaffItem } from './StaffItem'
 import { StaffText } from './StaffText'
 import { Barline } from './Barline'
 import { LabanSymbol } from './LabanSymbol'
+import { PoseLandmarker } from './MediaPipe'
 import type { Score } from './Score'
 import type { StaffOptions, Coords, LabanSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
 class StaffLine {

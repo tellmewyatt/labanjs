@@ -1,10 +1,13 @@
 import './style.css'
 import { Score, symbols } from '../lib/main.ts'
+import { StaffPoseLandmarker } from '../lib/MediaPipe'
 const { right, forward, forwardRight } = symbols
 
 const score = new Score(document.querySelector("#score")!)
 document.querySelector<HTMLElement>("#score")!.style.height = "3000px"
 const staff1 = score.addLabanStaff()
+const poseLandmarker = new StaffPoseLandmarker(score, staff1)
+poseLandmarker.addElements(document.getElementById("video"))
 score.addLabanStaff()
 
 staff1.addLabanSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: "right", level: 'high' })
@@ -16,6 +19,7 @@ staff1.addBarline({ xSpaces: 0, widthSpaces: 4, time: 5, barlineType: "single" }
 staff1.addBarline({ xSpaces: 0, widthSpaces: 4, time: 10, barlineType: "single" })
 staff1.addBarline({ xSpaces: 0, widthSpaces: 4, time: 0, barlineType: "double" })
 staff1.addBarline({ time: -1.5, widthSpaces: 4 })
+staff1.addStaffText({ xSpaces: -0.5, content: "Welcome to LabanJS! Click 'Start' to start playback", time: 0 })
 const cueA = staff1.addStaffCue({ time: -1, name: "A" })
 const cueB = staff1.addStaffCue({ time: 5, name: "B" })
 cueB.onCue(dt => staff1.start(cueB.startTime))
@@ -28,6 +32,3 @@ document.querySelector("#reset").addEventListener("mousedown", () => staff1.goTo
 
 score.addListeners()
 score.render()
-for (const staff of score.staffs) {
-
-}
