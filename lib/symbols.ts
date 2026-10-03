@@ -35,5 +35,4 @@ const symbolDefs = Object.entries(symbols).reduce((p, [k, v]) => {
 
 
 }, "")
-console.log(symbolDefs)
 export { symbols, symbolDefs }

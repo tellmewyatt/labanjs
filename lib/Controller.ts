@@ -1,73 +1,84 @@
+/** Control can be thought of as a 1D array, hence mag is used to represent its value */
 export class Control {
-  #_inputMin: number;
-  #_inputMax: number;
-  #_outputMin: number;
-  #_outputMax: number;
-  overflow: 'clamp' = 'clamp'
-  // Use setters so that we only have to calculate the transform functon once
-  set inputMin(value) {
-    this.#_inputMin = value 
-    this.updateTransform()
-  }
-  set inputMax(value) {
-    this.#_inputMax =value  
-    this.updateTransform()
-  }
-  set outputMax(value) {
-    this.#_outputMax = value 
-    this.updateTransform()
-  }
-  set outputMin(value) {
-    this.#_outputMin = value 
-    this.updateTransform()
-  }
-  get inputMin() { return this.#_inputMin }
-  get outputMin() { return this.#_outputMin }
-  get inputMax() { return this.#_inputMax }
-  get outputMax() { return this.#_outputMax }
-  constructor(inputMin, inputMax, outputMin, outputMax) {
-    this.#_inputMin = inputMin
-    this.#_inputMax = inputMax
-    this.#_outputMin = outputMin
-    this.#_outputMax = outputMax
-  }
-  /** Performs the clamp operation on the input */
-  clampInput(input: number) {
-    return Math.max(Math.min(this.inputMax, input), this.inputMin)
-  }
-  updateTransform() {
-    return
+  inputMin: number
+  inputMax: number
+  outputMin: number
+  outputMax: number
+  #mag: number;
+  callbacks: Record<string, function>
+  items: Controllable[]
+  set mag(mag: number) {
+    this.#mag = mag
+    this.#executeCalls()
 
   }
-  /** Scaling operation after clamp */
-  transform(input: number) {
-    return input
-  }
-  /** Applies all operations */
-  apply(input: number) {
-    return this.transform(this.clampInput(input))
+  get mag() {
+    return this.#mag
 
   }
-  /** sets the parameter that this controls **/
-  controls() {
+  constructor (mag: number) {
+    this.#mag = mag 
+    this.callbacks = {}
 
+  }
+  inputRange(inputMin: number, inputMax: number) {
+    this.inputMin = inputMin
+    this.inputMax = inputMax
+  }
+  outputRange(outputMin, outputMax: number) {
+    this.outputMin = outputMin
+    this.outputMax = outputMax
+
+  }
+  calls(fn: function) {
+    this.callbacks[fn] = fn
+  }
+  removeCall(fn) {
+    delete this.callbacks[fn]
+  }
+  removeAllCalls() {
+    this.callbacks = {}
+  }
+  #executeCalls() {
+    for(const callback of Object.values(this.callbacks)) {
+      callback(this.mag)
+    }
   }
 }
 export class LinearControl extends Control {
   scaleFactor: number;
   yIntercept: number;
-  constructor(inputMin, inputMax, outputMin, outputMax) {
-    super(inputMin, inputMax, outputMin, outputMax)
-    this.updateTransform()
-
-  }
   updateTransform() {
     this.scaleFactor = (this.outputMax - this.outputMin) / (this.inputMax - this.inputMin)
     this.yIntercept = this.outputMin - this.scaleFactor * this.inputMin;
   }
   transform(input: number) {
-    console.log(this)
     return this.scaleFactor * input + this.yIntercept
+  }
+
+}
+export class ControlVector extends Array {
+  #mag: number;
+  get x() { return this[0] }
+  get y() { return this[1] }
+  get z() { return this[2] }
+  set x(x) { this[0].value = x }
+  set y(y) { this[1].value = y }
+  set z(z) { this[2].value = z }
+  get mag() {
+    const { x, y, z } = this;
+    const sum = Math.pow(x.value, 2) + Math.pow(y.value, 2) + Math.pow(z.value, 2)
+    this.#mag.value =  Math.sqrt(sum)
+    return this.#mag
+  }
+  constructor(...args) {
+    const newArgs = []
+    for (const arg in args) {
+      args[arg]
+      newArgs.push( new Control(arg));
+    }
+    super(...newArgs)
+    this.#mag = new Control(0)
   }
 
 }

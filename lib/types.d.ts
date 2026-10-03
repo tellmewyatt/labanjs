@@ -3,7 +3,6 @@ export interface Coords {
   height: number;
   x: number;
   y: number;
-
 }
 /** Direction of a score - matches with HTML */
 export type Orientation = 'column'|'row'|'row-reverse'|'column-reverse'

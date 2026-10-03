@@ -9,6 +9,7 @@ const staff1 = score.addLabanStaff()
 const poseLandmarker = new PoseController(score, staff1)
 poseLandmarker.render(document.getElementById("video"))
 poseLandmarker.renderData(document.getElementById("videoData"))
+poseLandmarker.landmarks.nose.mag.calls(v => console.log(v))
 score.addLabanStaff()
 
 staff1.addLabanSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: "right", level: 'high' })

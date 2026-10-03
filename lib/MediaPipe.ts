@@ -1,5 +1,5 @@
 import { FilesetResolver, DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision'
-import { LinearControl } from './Controller'
+import { ControlVector, Control } from './Controller'
 
 const landmarkList = [
     "nose",
@@ -36,26 +36,31 @@ const landmarkList = [
     "left foot index",
     "right foot index"
 ]
-class Landmark {
+class Landmark extends ControlVector {
   key: string;
-  x: number;
-  y: number;
-  z: number;
-  velocity: number;
+  velocity: ControlVector;
   constructor (key: string) {
-    this.x = 0
-    this.y = 0
-    this.z = 0
+    super(0,0,0)
     this.key = key
-    this.velocity = 0
+    this.velocity = new ControlVector(0,0,0)
+  }
+  setPosition(x: number, y: number, z: number, dt: number) {
+    this.velocity.x = (x - this.x.value) / dt
+    this.velocity.y = (y - this.y.value) / dt
+    this.velocity.z = (z - this.z.value) / dt
+    this.x = x
+    this.y = y
+    this.z = z
+
   }
   renderData() {
     return `
     <tr>
       <td>${this.key}</td>
-      <td>${this.x.toFixed(2)}</td>
-      <td>${this.y.toFixed(2)}</td>
-      <td>${this.z.toFixed(2)}</td>
+      <td>${this.x.value.toFixed(2)}</td>
+      <td>${this.y.value.toFixed(2)}</td>
+      <td>${this.z.value.toFixed(2)}</td>
+      <td>${this.velocity.mag.value.toFixed(2)}</td>
     </tr>`
 
   }
@@ -63,6 +68,10 @@ class Landmark {
 }
 class PoseLandmarkerSetup {
   renderDataTarget: Element;
+  constructor(landmarks) {
+    this.landmarks = landmarks
+
+  }
   setup(targetElement) {
     this.containerElement = document.createElement("div")
     this.canvasElement = document.createElement("canvas")
@@ -72,10 +81,6 @@ class PoseLandmarkerSetup {
     this.video.setAttribute("autoplay", true)
     this.containerElement.appendChild(this.video)
     this.containerElement.appendChild(this.canvasElement)
-    this.landmarks = {}
-    for (const name of landmarkList) {
-      this.landmarks[name] = new Landmark(name)
-    }
     targetElement.appendChild(this.containerElement)
     if (navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ video: true })
@@ -120,12 +125,7 @@ class PoseLandmarkerSetup {
     for (let i = 0; i < worldLandmarks.length; i++) {
       const landmark = worldLandmarks[i]
       const thisLandmark = this.landmarks[landmarkList[i]]
-
-      thisLandmark.velocity = Math.sqrt(
-        (landmark.x - thisLandmark.x) ^ 2 + (landmark.y - thisLandmark.y )^ 2 + (landmark.z - thisLandmark.z) ^ 2) / dt
-      thisLandmark.x = landmark.x
-      thisLandmark.y = landmark.y
-      thisLandmark.z = landmark.z
+      thisLandmark.setPosition(landmark.x, landmark.y, landmark.z, dt)
     }
     this.drawingUtils.drawLandmarks(
       landmarks, 
@@ -147,6 +147,7 @@ class PoseLandmarkerSetup {
           <th>X</th>
           <th>Y</th>
           <th>Z</th>
+          <th>speed</th>
 
          </thead>
          <tbody>
@@ -160,7 +161,13 @@ class PoseLandmarkerSetup {
   renderLoop() {
     if (this.video.currentTime !== this.lastVideoTime) {
       const poseLandmarkerResult = this.poseLandmarker.detectForVideo(this.video, this.video.currentTime * 1000);
-      this.processResults(poseLandmarkerResult, this.video.currentTime - this.lastVideoTime);
+      try {
+        this.processResults(poseLandmarkerResult, this.video.currentTime - this.lastVideoTime);
+      }
+      catch (e) {
+        console.error(e)
+
+      }
       this.lastVideoTime = this.video.currentTime;
       if(this.renderDataTarget)
         this.renderData(this.renderDataTarget)
@@ -172,17 +179,23 @@ class PoseLandmarkerSetup {
 }
 export class PoseController {
   id: string
+  #landmarker: PoseLandmarkerSetup
+  landmarks: Record<string, Landmark>
   constructor(score, staff) {
     this.id = score.register(this)
-    this.landmarker = new PoseLandmarkerSetup()
+    this.landmarks = {}
+    for (const name of landmarkList) {
+      this.landmarks[name] = new Landmark(name)
+    }
+    this.#landmarker = new PoseLandmarkerSetup(this.landmarks)
   }
   render(targetElement) {
-    this.landmarker.setup(targetElement)
+    this.#landmarker.setup(targetElement)
   }
   renderData(target: Element) {
-    this.landmarker.renderDataTarget = target
-
+    this.#landmarker.renderDataTarget = target
   }
+  
 
 }
 
