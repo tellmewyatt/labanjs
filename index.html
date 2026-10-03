@@ -13,7 +13,10 @@
           <div id="score"></div>
         </div>
       </div>
-      <div id="video" style="flex-grow: 1"></div>
+      <div style="display: flex; flex-direction: row; flex-grow: 1">
+        <div id="video" style="flex-grow: 1"></div>
+        <div id="videoData" style="flex-grow: 1; position: relative; overflow: auto"></div>
+      </div>
       <div style="display: flex; flex-direction: row">
         <button id="playbackButton" style="width: 100px; height: 100px">Start Playback</button>
         <button id="reset" style="width: 100px; height: 100px">Reset</button>

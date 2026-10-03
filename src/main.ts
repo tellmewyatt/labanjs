@@ -1,13 +1,14 @@
 import './style.css'
 import { Score, symbols } from '../lib/main.ts'
-import { StaffPoseLandmarker } from '../lib/MediaPipe'
+import { PoseController } from '../lib/MediaPipe'
 const { right, forward, forwardRight } = symbols
 
 const score = new Score(document.querySelector("#score")!)
 document.querySelector<HTMLElement>("#score")!.style.height = "3000px"
 const staff1 = score.addLabanStaff()
-const poseLandmarker = new StaffPoseLandmarker(score, staff1)
-poseLandmarker.addElements(document.getElementById("video"))
+const poseLandmarker = new PoseController(score, staff1)
+poseLandmarker.render(document.getElementById("video"))
+poseLandmarker.renderData(document.getElementById("videoData"))
 score.addLabanStaff()
 
 staff1.addLabanSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: "right", level: 'high' })
