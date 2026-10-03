@@ -3,38 +3,38 @@ import { ControlVector, Control } from './Controller'
 
 const landmarkList = [
     "nose",
-    "left eye (inner)",
-    "left eye",
-    "left eye (outer)",
-    "right eye (inner)",
-    "right eye",
-    "right eye (outer)",
-    "left ear",
-    "right ear",
-    "mouth (left)",
-    "mouth (right)",
-    "left shoulder",
-    "right shoulder",
-    "left elbow",
-    "right elbow",
-    "left wrist",
-    "right wrist",
-    "left pinky",
-    "right pinky",
-    "left index",
-    "right index",
-    "left thumb",
-    "right thumb",
-    "left hip",
-    "right hip",
-    "left knee",
-    "right knee",
-    "left ankle",
-    "right ankle",
-    "left heel",
-    "right heel",
-    "left foot index",
-    "right foot index"
+    "leftEyeInner",
+    "leftEye",
+    "leftEyeOuter",
+    "rightEyeInner",
+    "rightEye",
+    "rightEyeOuter",
+    "leftEar",
+    "rightEar",
+    "mouthLeft",
+    "mouthRight",
+    "leftShoulder",
+    "rightShoulder",
+    "leftElbow",
+    "rightElbow",
+    "leftWrist",
+    "rightWrist",
+    "leftPinky",
+    "rightPinky",
+    "leftIndex",
+    "rightIndex",
+    "leftThumb",
+    "rightThumb",
+    "leftHip",
+    "rightHip",
+    "leftKnee",
+    "rightKnee",
+    "leftAnkle",
+    "rightAnkle",
+    "leftHeel",
+    "rightHeel",
+    "leftFootIndex",
+    "rightFootIndex"
 ]
 class Landmark extends ControlVector {
   key: string;
@@ -45,12 +45,12 @@ class Landmark extends ControlVector {
     this.velocity = new ControlVector(0,0,0)
   }
   setPosition(x: number, y: number, z: number, dt: number) {
-    this.velocity.x = (x - this.x.value) / dt
-    this.velocity.y = (y - this.y.value) / dt
-    this.velocity.z = (z - this.z.value) / dt
-    this.x = x
-    this.y = y
-    this.z = z
+    this.velocity.setValues(
+      (x - this.x.value) / dt,
+      (y - this.y.value) / dt,
+      (z - this.z.value) / dt
+    )
+    this.setValues(x, y, z)
 
   }
   renderData() {
@@ -180,12 +180,15 @@ class PoseLandmarkerSetup {
 export class PoseController {
   id: string
   #landmarker: PoseLandmarkerSetup
+  [landmarkList]: Landmark;
   landmarks: Record<string, Landmark>
   constructor(score, staff) {
     this.id = score.register(this)
     this.landmarks = {}
     for (const name of landmarkList) {
       this.landmarks[name] = new Landmark(name)
+      // Alias this directly to the class for eeasy access
+      this[name] = this.landmarks[name];
     }
     this.#landmarker = new PoseLandmarkerSetup(this.landmarks)
   }

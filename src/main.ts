@@ -1,7 +1,20 @@
 import './style.css'
+import * as Tone from "tone";
 import { Score, symbols } from '../lib/main.ts'
 import { PoseController } from '../lib/MediaPipe'
 const { right, forward, forwardRight } = symbols
+document.getElementById("startTone").addEventListener("mousedown", () => {
+  Tone.start();
+  const synth = new Tone.Synth().toDestination();
+  const now = Tone.now();
+  const osc = new Tone.Oscillator().toDestination();
+  // start at "C4"
+  osc.frequency.value = "C4";
+  // ramp to "C2" over 2 seconds
+  osc.start();
+  poseLandmarker.rightWrist.x.calls(v => { console.log(v); osc.frequency.value = -v * 200 + 100 })
+})
+
 
 const score = new Score(document.querySelector("#score")!)
 document.querySelector<HTMLElement>("#score")!.style.height = "3000px"
@@ -9,7 +22,6 @@ const staff1 = score.addLabanStaff()
 const poseLandmarker = new PoseController(score, staff1)
 poseLandmarker.render(document.getElementById("video"))
 poseLandmarker.renderData(document.getElementById("videoData"))
-poseLandmarker.landmarks.nose.mag.calls(v => console.log(v))
 score.addLabanStaff()
 
 staff1.addLabanSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: "right", level: 'high' })

@@ -1,23 +1,22 @@
-/** Control can be thought of as a 1D array, hence mag is used to represent its value */
 export class Control {
   inputMin: number
   inputMax: number
   outputMin: number
   outputMax: number
-  #mag: number;
+  #value: number;
   callbacks: Record<string, function>
   items: Controllable[]
-  set mag(mag: number) {
-    this.#mag = mag
+  set value(value: number) {
+    this.#value = value
     this.#executeCalls()
 
   }
-  get mag() {
-    return this.#mag
+  get value() {
+    return this.#value
 
   }
-  constructor (mag: number) {
-    this.#mag = mag 
+  constructor (value: number) {
+    this.#value = value 
     this.callbacks = {}
 
   }
@@ -41,7 +40,7 @@ export class Control {
   }
   #executeCalls() {
     for(const callback of Object.values(this.callbacks)) {
-      callback(this.mag)
+      callback(this.value)
     }
   }
 }
@@ -57,28 +56,35 @@ export class LinearControl extends Control {
   }
 
 }
-export class ControlVector extends Array {
-  #mag: number;
-  get x() { return this[0] }
-  get y() { return this[1] }
-  get z() { return this[2] }
-  set x(x) { this[0].value = x }
-  set y(y) { this[1].value = y }
-  set z(z) { this[2].value = z }
+export class ControlVector {
+  #mag: Control;
+  #controls: Control[]
+  get x() { return this.#controls[0] }
+  get y() { return this.#controls[1] }
+  get z() { return this.#controls[2] }
   get mag() {
-    const { x, y, z } = this;
-    const sum = Math.pow(x.value, 2) + Math.pow(y.value, 2) + Math.pow(z.value, 2)
+    let sum = 0;
+    for (const control of this.#controls) {
+      sum += Math.pow(control.value, 2)
+    }
     this.#mag.value =  Math.sqrt(sum)
     return this.#mag
   }
-  constructor(...args) {
-    const newArgs = []
-    for (const arg in args) {
-      args[arg]
-      newArgs.push( new Control(arg));
+  get controls() {
+    return this.#controls
+  }
+  constructor(...values) {
+    this.#controls = []
+    for (const value of values) {
+      this.#controls.push( new Control(value));
     }
-    super(...newArgs)
     this.#mag = new Control(0)
+  }
+  setValues(...values) {
+    for(const i in values) {
+      this.#controls[i].value = values[i]
+    }
+    this.mag;
   }
 
 }
