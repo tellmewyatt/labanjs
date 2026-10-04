@@ -1,11 +1,10 @@
 export class Control {
-  inputMin: number
-  inputMax: number
-  outputMin: number
-  outputMax: number
+  inputMin?: number
+  inputMax?: number
+  outputMin?: number
+  outputMax?: number
   #value: number;
-  callbacks: Record<string, function>
-  items: Controllable[]
+  callbacks: Map<Function, Function>
   set value(value: number) {
     this.#value = value
     this.#executeCalls()
@@ -17,44 +16,32 @@ export class Control {
   }
   constructor (value: number) {
     this.#value = value 
-    this.callbacks = {}
+    this.callbacks = new Map()
 
   }
   inputRange(inputMin: number, inputMax: number) {
     this.inputMin = inputMin
     this.inputMax = inputMax
   }
-  outputRange(outputMin, outputMax: number) {
+  outputRange(outputMin: number, outputMax: number) {
     this.outputMin = outputMin
     this.outputMax = outputMax
 
   }
-  calls(fn: function) {
-    this.callbacks[fn] = fn
+  calls(fn: Function) {
+    this.callbacks.set(fn, fn)
   }
-  removeCall(fn) {
-    delete this.callbacks[fn]
+  removeCall(fn: Function) {
+    this.callbacks.delete(fn)
   }
   removeAllCalls() {
-    this.callbacks = {}
+    this.callbacks.clear() 
   }
   #executeCalls() {
-    for(const callback of Object.values(this.callbacks)) {
+    for(const callback of this.callbacks.values()) {
       callback(this.value)
     }
   }
-}
-export class LinearControl extends Control {
-  scaleFactor: number;
-  yIntercept: number;
-  updateTransform() {
-    this.scaleFactor = (this.outputMax - this.outputMin) / (this.inputMax - this.inputMin)
-    this.yIntercept = this.outputMin - this.scaleFactor * this.inputMin;
-  }
-  transform(input: number) {
-    return this.scaleFactor * input + this.yIntercept
-  }
-
 }
 export class ControlVector {
   #mag: Control;
@@ -73,14 +60,14 @@ export class ControlVector {
   get controls() {
     return this.#controls
   }
-  constructor(...values) {
+  constructor(...values: number[]) {
     this.#controls = []
     for (const value of values) {
       this.#controls.push( new Control(value));
     }
     this.#mag = new Control(0)
   }
-  setValues(...values) {
+  setValues(...values: number[]) {
     for(const i in values) {
       this.#controls[i].value = values[i]
     }

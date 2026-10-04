@@ -1,18 +1,15 @@
 import './style.css'
 import * as Tone from "tone";
-import { Score, symbols } from '../lib/main.ts'
+import { Score } from '../lib/main.ts'
 import { PoseController } from '../lib/MediaPipe'
-const { right, forward, forwardRight } = symbols
-document.getElementById("startTone").addEventListener("mousedown", () => {
+document.getElementById("startTone")?.addEventListener("mousedown", () => {
   Tone.start();
-  const synth = new Tone.Synth().toDestination();
-  const now = Tone.now();
   const osc = new Tone.Oscillator().toDestination();
   // start at "C4"
   osc.frequency.value = "C4";
   // ramp to "C2" over 2 seconds
   osc.start();
-  poseLandmarker.rightWrist.x.calls(v => { console.log(v); osc.frequency.value = -v * 200 + 100 })
+  poseLandmarker.landmarks.rightWrist.x.calls((v: number) => { console.log(v); osc.frequency.value = -v * 200 + 100 })
 })
 
 
@@ -20,8 +17,12 @@ const score = new Score(document.querySelector("#score")!)
 document.querySelector<HTMLElement>("#score")!.style.height = "3000px"
 const staff1 = score.addLabanStaff()
 const poseLandmarker = new PoseController(score, staff1)
-poseLandmarker.render(document.getElementById("video"))
-poseLandmarker.renderData(document.getElementById("videoData"))
+const videoContainer = document.getElementById("video")
+if(videoContainer)
+  poseLandmarker.render(videoContainer)
+const videoDataContainer = document.getElementById("videoData")
+if(videoDataContainer)
+  poseLandmarker.renderData(videoDataContainer)
 score.addLabanStaff()
 
 staff1.addLabanSymbol({ xSpaces: 2, widthSpaces: 1, startTime: 1, endTime: 2, symbol: "right", level: 'high' })
@@ -34,14 +35,13 @@ staff1.addBarline({ xSpaces: 0, widthSpaces: 4, time: 10, barlineType: "single" 
 staff1.addBarline({ xSpaces: 0, widthSpaces: 4, time: 0, barlineType: "double" })
 staff1.addBarline({ time: -1.5, widthSpaces: 4 })
 staff1.addStaffText({ xSpaces: -0.5, content: "Welcome to LabanJS! Click 'Start' to start playback", time: 0 })
-const cueA = staff1.addStaffCue({ time: -1, name: "A" })
+staff1.addStaffCue({ time: -1, name: "A" })
 const cueB = staff1.addStaffCue({ time: 5, name: "B" })
-cueB.onCue(dt => staff1.start(cueB.startTime))
+cueB.onCue(() => staff1.start(cueB.startTime))
 cueB.onReached(dt => staff1.stopPlayback(-dt))
-document.querySelector("#playbackButton").addEventListener("mousedown", () => staff1.start())
-document.querySelector("#cueA").addEventListener("mousedown", () => cueA.handleCue(0))
-document.querySelector("#cueB").addEventListener("mousedown", () => cueB.handleCue(0))
-document.querySelector("#reset").addEventListener("mousedown", () => staff1.goToCueIndex(0))
+document.querySelector("#playbackButton")!.addEventListener("mousedown", () => staff1.start())
+document.querySelector("#cueB")!.addEventListener("mousedown", () => cueB.handleCue!(0))
+document.querySelector("#reset")!.addEventListener("mousedown", () => staff1.goToCueIndex(0))
 
 
 score.addListeners()

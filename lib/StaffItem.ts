@@ -20,7 +20,7 @@ export class StaffItem {
     this.endTime = options.endTime ?? 0
     this.id = score.register(this)
   }
-  render(coords: Coords) {
+  render(coords: Coords): string {
     const { x, y, width, height } = coords;
     return `<rect x=${x} y=${y} width=${width} height=${height} />`
 

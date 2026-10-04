@@ -1,5 +1,4 @@
 import { Staff } from './Staff'
-import { Orientation } from './types.d'
 import { symbolDefs } from './symbols'
 export class Score {
   staffs: Staff[];
@@ -21,7 +20,7 @@ export class Score {
     return Math.random().toString(16).slice(2)
   }
   addListeners() {
-    const handler = (e: MouseEvent) => {
+    const handler = (e: Event) => {
       if(e.target) {
         const target = e.target as Element
         let id = target.id

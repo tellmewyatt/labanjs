@@ -3,9 +3,8 @@ import { StaffItem } from './StaffItem'
 import { StaffText } from './StaffText'
 import { Barline } from './Barline'
 import { LabanSymbol } from './LabanSymbol'
-import { PoseLandmarker } from './MediaPipe'
 import type { Score } from './Score'
-import type { StaffOptions, Coords, LabanSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
+import type { Coords, LabanSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
 class StaffLine {
   stroke: string;
   id: string;
@@ -112,7 +111,7 @@ export class Staff {
     }
     return staffItems
   }
-  stopPlayback(dt) {
+  stopPlayback(dt: number) {
     this.stopAtTime = this.playbackTime + dt
 
   }
@@ -140,7 +139,7 @@ export class Staff {
           let newTime = (performance.now() - zero) / 1000 + offset
           this.playbackTime = newTime
           if(currentCue && currentCue.startTime - this.playbackLookAhead < newTime) {
-            currentCue.handleReached(newTime - currentCue.startTime)
+            currentCue.handleReached?.(newTime - currentCue.startTime)
             this.cueIndex++
             currentCue = this.cues[this.cueIndex]
           }

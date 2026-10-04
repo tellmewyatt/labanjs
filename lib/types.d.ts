@@ -37,8 +37,6 @@ export interface StaffCueOptions {
   time?: number;
   /** Title of cue */
   name?: string;
-  /** How should this cue be activated **/
-  activationOptions?: CueActivationOptions
 
 }
 

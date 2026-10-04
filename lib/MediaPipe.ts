@@ -1,5 +1,8 @@
 import { FilesetResolver, DrawingUtils, PoseLandmarker } from '@mediapipe/tasks-vision'
-import { ControlVector, Control } from './Controller'
+import type { PoseLandmarkerResult } from '@mediapipe/tasks-vision'
+import { ControlVector } from './Controller'
+import type { Score } from './Score'
+import type { Staff } from './Staff'
 
 const landmarkList = [
     "nose",
@@ -67,30 +70,41 @@ class Landmark extends ControlVector {
 
 }
 class PoseLandmarkerSetup {
-  renderDataTarget: Element;
-  constructor(landmarks) {
+  renderDataTarget?: Element;
+  landmarks: Record<string, Landmark>
+  containerElement?: HTMLDivElement;
+  canvasElement?: HTMLCanvasElement;
+  canvasCtx?: CanvasRenderingContext2D | null;
+  drawingUtils?: DrawingUtils;
+  video?: HTMLVideoElement;
+  poseLandmarker?: PoseLandmarker;
+  lastVideoTime: number;
+  constructor(landmarks: Record<string, Landmark>) {
     this.landmarks = landmarks
+    this.lastVideoTime = 0;
 
   }
-  setup(targetElement) {
+  setup(targetElement: Element) {
     this.containerElement = document.createElement("div")
     this.canvasElement = document.createElement("canvas")
     this.canvasCtx = this.canvasElement.getContext("2d")
-    this.drawingUtils = new DrawingUtils(this.canvasCtx);
+    this.drawingUtils = new DrawingUtils(this.canvasCtx as CanvasRenderingContext2D);
     this.video = document.createElement("video")
-    this.video.setAttribute("autoplay", true)
-    this.containerElement.appendChild(this.video)
-    this.containerElement.appendChild(this.canvasElement)
+    this.video.setAttribute("autoplay", "true")
+    this.containerElement!.appendChild(this.video)
+    this.containerElement!.appendChild(this.canvasElement)
     targetElement.appendChild(this.containerElement)
     if (navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ video: true })
         .then((stream) => {
-          this.video.srcObject = stream;
+          this.video!.srcObject = stream;
         })
     }
     this.video.addEventListener("loadeddata", () => this.loadModel().then(() => this.renderLoop()))
   }
   async loadModel() {
+    if(!this.canvasElement || !this.containerElement || !this.video)
+      throw Error("You must call PoseLandmarkerSetup.setup before calling load model!")
     const vision = await FilesetResolver.forVisionTasks("/assets/wasm");
     const poseLandmarker = await PoseLandmarker.createFromOptions(
         vision,
@@ -101,7 +115,6 @@ class PoseLandmarkerSetup {
           },
           runningMode: "VIDEO"
         });
-    const fillBox = document.querySelector("#vidContainer");
     this.canvasElement.width = this.video.videoWidth;
     this.canvasElement.height= this.video.videoHeight;
     this.containerElement.style.position="relative"
@@ -117,9 +130,9 @@ class PoseLandmarkerSetup {
     this.poseLandmarker = poseLandmarker
 
   }
-  processResults(result, dt) {
-    this.canvasCtx.save();
-    this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+  processResults(result: PoseLandmarkerResult, dt: number) {
+    this.canvasCtx!.save();
+    this.canvasCtx!.clearRect(0, 0, this.canvasElement!.width, this.canvasElement!.height);
     const landmarks = result.landmarks[0]
     const worldLandmarks = result.worldLandmarks[0]
     for (let i = 0; i < worldLandmarks.length; i++) {
@@ -127,16 +140,16 @@ class PoseLandmarkerSetup {
       const thisLandmark = this.landmarks[landmarkList[i]]
       thisLandmark.setPosition(landmark.x, landmark.y, landmark.z, dt)
     }
-    this.drawingUtils.drawLandmarks(
+    this.drawingUtils!.drawLandmarks(
       landmarks, 
       {
         radius: data => DrawingUtils.lerp(
-          data.from.z, 
+          data!.from!.z, 
           -0.15, 0.1, 5, 1)
       }
     );
-    this.drawingUtils.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS);
-    this.canvasCtx.restore();
+    this.drawingUtils!.drawConnectors(landmarks, PoseLandmarker.POSE_CONNECTIONS);
+    this.canvasCtx!.restore();
   }
   renderData(target: Element) {
       target.innerHTML = `
@@ -159,7 +172,7 @@ class PoseLandmarkerSetup {
         `
   }
   renderLoop() {
-    if (this.video.currentTime !== this.lastVideoTime) {
+    if (this.video && this.poseLandmarker && this.video.currentTime !== this.lastVideoTime) {
       const poseLandmarkerResult = this.poseLandmarker.detectForVideo(this.video, this.video.currentTime * 1000);
       try {
         this.processResults(poseLandmarkerResult, this.video.currentTime - this.lastVideoTime);
@@ -178,21 +191,20 @@ class PoseLandmarkerSetup {
   }
 }
 export class PoseController {
-  id: string
   #landmarker: PoseLandmarkerSetup
-  [landmarkList]: Landmark;
   landmarks: Record<string, Landmark>
-  constructor(score, staff) {
+  staff: Staff;
+  id: string;
+  constructor(score: Score, staff: Staff) {
     this.id = score.register(this)
+    this.staff = staff;
     this.landmarks = {}
     for (const name of landmarkList) {
       this.landmarks[name] = new Landmark(name)
-      // Alias this directly to the class for eeasy access
-      this[name] = this.landmarks[name];
     }
     this.#landmarker = new PoseLandmarkerSetup(this.landmarks)
   }
-  render(targetElement) {
+  render(targetElement: Element) {
     this.#landmarker.setup(targetElement)
   }
   renderData(target: Element) {
