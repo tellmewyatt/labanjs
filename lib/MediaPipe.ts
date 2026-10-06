@@ -105,12 +105,12 @@ class PoseLandmarkerSetup {
   async loadModel() {
     if(!this.canvasElement || !this.containerElement || !this.video)
       throw Error("You must call PoseLandmarkerSetup.setup before calling load model!")
-    const vision = await FilesetResolver.forVisionTasks("/assets/wasm");
+    const vision = await FilesetResolver.forVisionTasks(new URL("./assets/wasm", import.meta.url).href);
     const poseLandmarker = await PoseLandmarker.createFromOptions(
         vision,
         {
           baseOptions: {
-            modelAssetPath: "/pose_landmarker_full.task",
+            modelAssetPath: new URL("./assets/pose_landmarker_full.task", import.meta.url).href,
             delegate: "GPU"
           },
           runningMode: "VIDEO"
