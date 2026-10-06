@@ -5,7 +5,8 @@ import { Barline } from './Barline'
 import { LabanSymbol } from './LabanSymbol'
 import type { Score } from './Score'
 import type { Coords, LabanSymbolOptions, StaffCueOptions, StaffTextOptions, BarlineOptions } from './types.d.ts'
-class StaffLine {
+/** Represents a single staff line. This class should not be instantiated directly but rather created using Staff.addStaffLine */
+export class StaffLine {
   stroke: string;
   id: string;
   constructor(score: Score, stroke: string) {
@@ -19,9 +20,10 @@ class StaffLine {
     return `<line x1=${x} x2=${x} y1=${y} y2=${y+height} stroke='${stroke}' id="${this.id}" />`
   }
 }
+/** Represents a Staff. */
 export class Staff {
-  lastRenderProps?: Coords;
-  playbackLineId?: string;
+  #lastRenderProps?: Coords;
+  #playbackLineId?: string;
   playing: boolean;
   playbackTime: number;
   playbackLookAhead:number;
@@ -43,9 +45,11 @@ export class Staff {
     score.register(this)
 
   }
+  /** Adds a staff line to this staff */
   addStaffLine(stroke: string) {
     this.staffLines.push(new StaffLine(this.score, stroke))
   }
+  /** Creates a new Labanotation stretched symbol and adds it to this staff */
   addLabanSymbol(options?: LabanSymbolOptions) {
     const item = new LabanSymbol(this.score, this, options)
     this.staffItems.push(item)
@@ -53,6 +57,7 @@ export class Staff {
     return item
 
   }
+  /** Creates some text and adds it to this staff */
   addStaffText(options?: StaffTextOptions) {
     const item = new StaffText(this.score, this, options)
     this.staffItems.push(item)
@@ -60,6 +65,7 @@ export class Staff {
     return item
 
   }
+  /** Creates and adds a StaffCue to this staff */
   addStaffCue(options?: StaffCueOptions) {
     const item = new StaffCue(this.score, this, options)
     this.cues.push(item)
@@ -68,6 +74,7 @@ export class Staff {
     return item
 
   }
+  /** Creates and adds a Barline to this staff */
   addBarline(options?: BarlineOptions) {
     const item = new Barline(this.score, this, options)
     this.staffItems.push(item)
@@ -75,7 +82,7 @@ export class Staff {
     return item
 
   }
-  renderStaffLines(coords: Coords) {
+  #renderStaffLines(coords: Coords) {
     const { x, y, width, height } = coords;
     let staffLines = ""
     for (let i= 0; i < this.staffLines.length; i++) {
@@ -90,7 +97,7 @@ export class Staff {
     }
     return staffLines
   }
-  renderStaffItems(coords: Coords) {
+  #renderStaffItems(coords: Coords) {
     const staffSpace = coords.width / this.staffLines.length
     const { x, y, height } = coords;
     let staffItems = ""
@@ -127,12 +134,12 @@ export class Staff {
   start(time?: number) {
     if(time)
       this.playbackTime = time
-    const element = document.getElementById(this.playbackLineId ?? "")
+    const element = document.getElementById(this.#playbackLineId ?? "")
     this.playing = true
     let currentCue = this.cues[this.cueIndex]
     const offset = this.playbackTime
-    if(this.lastRenderProps && element) {
-      const { height, y } = this.lastRenderProps
+    if(this.#lastRenderProps && element) {
+      const { height, y } = this.#lastRenderProps
       const zero = performance.now()
       const animate = () => {
         if(element && this.playing) {
@@ -166,20 +173,20 @@ export class Staff {
     }
 
   }
-  renderPlaybackLine(coords: Coords) {
+  #renderPlaybackLine(coords: Coords) {
     const { x, y, width, height } = coords;
     const time = this.playbackTime
     const itemY = (1 - (time - this.score.startTime)/ this.score.getTotalTime()) * height + y
     const id = `playback-line-${this.score.generateId()}`
-    this.playbackLineId = id
+    this.#playbackLineId = id
     return `<rect id="${id}" x="${x}" width="${width}" height="2px" fill="red" y="${itemY}" />`
 
   }
   render(coords: Coords) {
-    this.lastRenderProps = coords; 
-    const staffLines = this.renderStaffLines(coords)
-    const staffItems = this.renderStaffItems(coords)
-    const playbackLine = this.renderPlaybackLine(coords)
+    this.#lastRenderProps = coords; 
+    const staffLines = this.#renderStaffLines(coords)
+    const staffItems = this.#renderStaffItems(coords)
+    const playbackLine = this.#renderPlaybackLine(coords)
     return `${staffLines}${staffItems}${playbackLine}`
   }
 

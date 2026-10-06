@@ -1,11 +1,20 @@
 import { Staff } from './Staff'
 import { symbolDefs } from './symbols'
+/** Represents a score. */
 export class Score {
+  /** 
+   * A list of staves within the score 
+   */
   staffs: Staff[];
+  /** The target element that this score will be rendered to */
   targetElement: Element;
+  /** The width of each staff in px */
   staffWidth: number;
+  /** A computed property that represents the end time of the last item in the score */
   endTime: number;
+  /** The start time of the score, computed similarly to endTime */
   startTime: number;
+  /** A record with all items in the score and their IDs, used for interactions */
   allItems: Record<string,any>;
   constructor(targetElement: Element) {
     this.staffs = [] 

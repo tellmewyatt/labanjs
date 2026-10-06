@@ -39,7 +39,7 @@ const landmarkList = [
     "leftFootIndex",
     "rightFootIndex"
 ]
-class Landmark extends ControlVector {
+export class Landmark extends ControlVector {
   key: string;
   velocity: ControlVector;
   constructor (key: string) {
